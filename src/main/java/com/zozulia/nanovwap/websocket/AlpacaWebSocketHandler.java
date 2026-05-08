@@ -24,6 +24,10 @@ public class AlpacaWebSocketHandler extends TextWebSocketHandler {
 
     private final ObjectMapper objectMapper;
 
+    private final String targetSymbol = "AAPL";
+    private double sumPriceVolume = 0.0;
+    private double totalVolume = 0.0;
+
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
         String payload = message.getPayload();
@@ -52,6 +56,16 @@ public class AlpacaWebSocketHandler extends TextWebSocketHandler {
         else if(messageType.equals("t")) {
             TradeMessage trade = objectMapper.treeToValue(event, TradeMessage.class);
             System.out.println("Deal info: " + trade.S() + " by " + trade.p() + ", deal size: " + trade.s());
+
+            if (trade.S().equals(targetSymbol)) {
+                sumPriceVolume += trade.p() * trade.s();
+                totalVolume += trade.s();
+                double currentVwap = sumPriceVolume / totalVolume;
+
+                System.out.println("--- NEW TRADE ---");
+                System.out.println("Price: " + trade.p() + " | Size: " + trade.s());
+                System.out.println("Current VWAP: " + currentVwap);
+            }
         }
     }
 
