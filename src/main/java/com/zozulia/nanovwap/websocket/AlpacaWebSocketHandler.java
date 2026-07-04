@@ -11,8 +11,7 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 @Component
 public class AlpacaWebSocketHandler extends TextWebSocketHandler {
@@ -23,48 +22,60 @@ public class AlpacaWebSocketHandler extends TextWebSocketHandler {
     private String apiSecret;
 
     private final ObjectMapper objectMapper;
-
-    private final String targetSymbol = "AAPL";
+    private final List<String> tickers = new ArrayList<>(
+            Arrays.asList("AAPL", "MSFT", "GOOGL", "META", "NVDA", "AMZN", "TSLA", "PLTR", "AVGO"));
+    private String currentTicker;
     private double sumPriceVolume = 0.0;
     private double totalVolume = 0.0;
+
+    @Override
+    public void afterConnectionEstablished(WebSocketSession session) throws Exception {
+        Scanner scanner = new Scanner(System.in);
+        for (String ticker : tickers) System.out.print(ticker + " ");
+
+        System.out.print("\nPlease peak the ticker: ");
+        this.currentTicker = scanner.nextLine().toUpperCase().trim();
+
+        System.out.println("Ticker has been peaked: " + currentTicker + ". Awaiting signal...");
+    }
 
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
         String payload = message.getPayload();
         JsonNode rootNode = objectMapper.readTree(payload);
-        JsonNode event = rootNode.get(0);
-        String messageType = event.get("T").asText();
 
-        if(messageType.equals("success") && event.get("msg").asText().equals("connected")) {
-            AuthMessage authMessage = new AuthMessage("auth", apiKey, apiSecret);
-            String jsonString = objectMapper.writeValueAsString(authMessage);
-            session.sendMessage(new TextMessage(jsonString));
+        if (rootNode.isArray()) {
+            for (JsonNode event : rootNode) {
+                String messageType = event.get("T").asText();
 
-            System.out.println("An authorization request has been sent");
-        }
-        else if(messageType.equals("success") && event.get("msg").asText().equals("authenticated")) {
-            List<String> subscribeList = new LinkedList<>();
-            subscribeList.add("AAPL");
+                if (messageType.equals("success") && event.get("msg").asText().equals("connected")) {
+                    AuthMessage authMessage = new AuthMessage("auth", apiKey, apiSecret);
+                    String jsonString = objectMapper.writeValueAsString(authMessage);
+                    session.sendMessage(new TextMessage(jsonString));
+                    System.out.println("An authorization request has been sent");
+                }
+                else if (messageType.equals("success") && event.get("msg").asText().equals("authenticated")) {
+                    List<String> subscribeList = new LinkedList<>();
+                    subscribeList.add(currentTicker);
 
-            SubscribeMessage subscribeMessage = new SubscribeMessage("subscribe", subscribeList);
-            String jsonSubscribeListString = objectMapper.writeValueAsString(subscribeMessage);
-            session.sendMessage(new TextMessage(jsonSubscribeListString));
+                    SubscribeMessage subscribeMessage = new SubscribeMessage("subscribe", subscribeList);
+                    String jsonSubscribeListString = objectMapper.writeValueAsString(subscribeMessage);
+                    session.sendMessage(new TextMessage(jsonSubscribeListString));
+                    System.out.println("A subscribe request has been sent");
+                }
+                else if (messageType.equals("t")) {
+                    TradeMessage trade = objectMapper.treeToValue(event, TradeMessage.class);
 
-            System.out.println("A subscription has been sent");
-        }
+                    if (trade.S().equals(currentTicker)) {
+                        sumPriceVolume += trade.p() * trade.s();
+                        totalVolume += trade.s();
+                        double currentVwap = sumPriceVolume / totalVolume;
 
-        else if(messageType.equals("t")) {
-            TradeMessage trade = objectMapper.treeToValue(event, TradeMessage.class);
-            System.out.println("Deal info: " + trade.S() + " by " + trade.p() + ", deal size: " + trade.s());
-
-            if (trade.S().equals(targetSymbol)) {
-                sumPriceVolume += trade.p() * trade.s();
-                totalVolume += trade.s();
-                double currentVwap = sumPriceVolume / totalVolume;
-
-                System.out.println("--- NEW TRADE ---");
-                System.out.println("Price: " + trade.p() + " | Size: " + trade.s());
-                System.out.println("Current VWAP: " + currentVwap);
+                        System.out.println("Deal info: " + trade.S() + " | Price: " + trade.p() + " | Size: " + trade.s());
+                        System.out.println("Current VWAP: " + currentVwap);
+                        System.out.println("--------------------------------");
+                    }
+                }
             }
         }
     }
