@@ -3,8 +3,6 @@ package com.zozulia.nanovwap.websocket;
 import com.zozulia.nanovwap.dto.AuthMessage;
 import com.zozulia.nanovwap.dto.SubscribeMessage;
 import com.zozulia.nanovwap.dto.TradeMessage;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
@@ -13,31 +11,16 @@ import tools.jackson.databind.ObjectMapper;
 
 import java.util.*;
 
-@Component
 public class AlpacaWebSocketHandler extends TextWebSocketHandler {
 
-    @Value("${alpaca.api.key}")
-    private String apiKey;
-    @Value("${alpaca.api.secret}")
-    private String apiSecret;
+    private final String currentTicker;
+    private final String apiKey;
+    private final String apiSecret;
 
     private final ObjectMapper objectMapper;
-    private final List<String> tickers = new ArrayList<>(
-            Arrays.asList("AAPL", "MSFT", "GOOGL", "META", "NVDA", "AMZN", "TSLA", "PLTR", "AVGO"));
-    private String currentTicker;
     private double sumPriceVolume = 0.0;
     private double totalVolume = 0.0;
 
-    @Override
-    public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-        Scanner scanner = new Scanner(System.in);
-        for (String ticker : tickers) System.out.print(ticker + " ");
-
-        System.out.print("\nPlease peak the ticker: ");
-        this.currentTicker = scanner.nextLine().toUpperCase().trim();
-
-        System.out.println("Ticker has been peaked: " + currentTicker + ". Awaiting signal...");
-    }
 
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
@@ -80,7 +63,10 @@ public class AlpacaWebSocketHandler extends TextWebSocketHandler {
         }
     }
 
-    public AlpacaWebSocketHandler(ObjectMapper objectMapper) {
+    public AlpacaWebSocketHandler(ObjectMapper objectMapper, String currentTicker, String apiKey, String apiSecret) {
         this.objectMapper = objectMapper;
+        this.currentTicker = currentTicker;
+        this.apiKey = apiKey;
+        this.apiSecret = apiSecret;
     }
 }
