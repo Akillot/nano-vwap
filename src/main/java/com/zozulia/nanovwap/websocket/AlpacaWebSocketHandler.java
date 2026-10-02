@@ -35,7 +35,7 @@ public class AlpacaWebSocketHandler extends TextWebSocketHandler {
                     AuthMessage authMessage = new AuthMessage("auth", apiKey, apiSecret);
                     String jsonString = objectMapper.writeValueAsString(authMessage);
                     session.sendMessage(new TextMessage(jsonString));
-                    System.out.println("An authorization request has been sent");
+                    System.out.println("--- An authorization request has been sent");
                 }
                 else if (messageType.equals("success") && event.get("msg").asText().equals("authenticated")) {
                     List<String> subscribeList = new LinkedList<>();
@@ -44,7 +44,7 @@ public class AlpacaWebSocketHandler extends TextWebSocketHandler {
                     SubscribeMessage subscribeMessage = new SubscribeMessage("subscribe", subscribeList);
                     String jsonSubscribeListString = objectMapper.writeValueAsString(subscribeMessage);
                     session.sendMessage(new TextMessage(jsonSubscribeListString));
-                    System.out.println("A subscribe request has been sent");
+                    System.out.println("--- A subscribe request has been sent");
                 }
                 else if (messageType.equals("t")) {
                     TradeMessage trade = objectMapper.treeToValue(event, TradeMessage.class);
