@@ -46,6 +46,13 @@ public class AlpacaWebSocketHandler extends TextWebSocketHandler {
                     session.sendMessage(new TextMessage(jsonSubscribeListString));
                     System.out.println("--- A subscribe request has been sent");
                 }
+                else if (messageType.equals("subscription")){
+                    System.out.println("--- Subscribed to trades: " + event.get("trades"));
+                }
+                else if (messageType.equals("error")) {
+                    System.out.println("--- Alpaca error " + event.get("code").asInt() + ": " + event.get("msg").asText());
+                    session.close();
+                }
                 else if (messageType.equals("t")) {
                     TradeMessage trade = objectMapper.treeToValue(event, TradeMessage.class);
 
