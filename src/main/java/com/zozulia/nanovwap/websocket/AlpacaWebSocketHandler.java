@@ -3,6 +3,7 @@ package com.zozulia.nanovwap.websocket;
 import com.zozulia.nanovwap.dto.AuthMessage;
 import com.zozulia.nanovwap.dto.SubscribeMessage;
 import com.zozulia.nanovwap.dto.TradeMessage;
+import com.zozulia.nanovwap.service.VwapCalculator;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
@@ -18,9 +19,7 @@ public class AlpacaWebSocketHandler extends TextWebSocketHandler {
     private final String apiSecret;
 
     private final ObjectMapper objectMapper;
-    private double sumPriceVolume = 0.0;
-    private double totalVolume = 0.0;
-
+    private final VwapCalculator vwapCalculator = new VwapCalculator();
 
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
@@ -57,12 +56,8 @@ public class AlpacaWebSocketHandler extends TextWebSocketHandler {
                     TradeMessage trade = objectMapper.treeToValue(event, TradeMessage.class);
 
                     if (trade.S().equals(currentTicker)) {
-                        sumPriceVolume += trade.p() * trade.s();
-                        totalVolume += trade.s();
-                        double currentVwap = sumPriceVolume / totalVolume;
-
                         System.out.println("Deal info: " + trade.S() + " | Price: " + trade.p() + " | Size: " + trade.s());
-                        System.out.println("Current VWAP: " + currentVwap);
+                        System.out.println("Current VWAP: " + vwapCalculator.add(trade.p(), trade.s()));
                         System.out.println("--------------------------------");
                     }
                 }
