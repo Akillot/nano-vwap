@@ -4,7 +4,6 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
-import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.beans.factory.annotation.Value;
 import tools.jackson.databind.ObjectMapper;
 
@@ -49,9 +48,8 @@ public class AlpacaWebSocketConfig {
 
             System.out.println("Ticker has been picked: " + currentTicker + ". Awaiting signal...");
 
-            var client = new StandardWebSocketClient();
-            var handler = new AlpacaWebSocketHandler(objectMapper, currentTicker, apiKey, apiSecret);
-            client.execute(handler, url);
+            var handler = new AlpacaWebSocketHandler(objectMapper, currentTicker, apiKey, apiSecret, url);
+            handler.connect();
         };
     }
 }
