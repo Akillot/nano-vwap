@@ -4,12 +4,16 @@ import com.zozulia.nanovwap.dto.AuthMessage;
 import com.zozulia.nanovwap.dto.SubscribeMessage;
 import com.zozulia.nanovwap.dto.TradeMessage;
 import com.zozulia.nanovwap.service.VwapCalculator;
+import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 public class AlpacaWebSocketHandler extends TextWebSocketHandler {
@@ -56,13 +60,28 @@ public class AlpacaWebSocketHandler extends TextWebSocketHandler {
                     TradeMessage trade = objectMapper.treeToValue(event, TradeMessage.class);
 
                     if (trade.S().equals(currentTicker)) {
-                        System.out.println("Deal info: " + trade.S() + " | Price: " + trade.p() + " | Size: " + trade.s());
+                        LocalDateTime localTime = trade.t()
+                                .atZone(ZoneId.systemDefault())
+                                .toLocalDateTime()
+                                .truncatedTo(ChronoUnit.SECONDS);
+
+                        System.out.println("Deal info: " + trade.S() + " | Price: " + trade.p() + " | Size: " + trade.s() + " | Timestamp: " + localTime);
                         System.out.println("Current VWAP: " + vwapCalculator.add(trade.p(), trade.s()));
                         System.out.println("--------------------------------");
                     }
                 }
             }
         }
+    }
+
+    @Override
+    public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
+        System.err.println("--- Session has been closed: " + session.getId() + " with status: " + status);
+    }
+
+    @Override
+    public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {
+        System.err.println("--- Transport error in session: " + session.getId() + ". Exception: " + exception);
     }
 
     public AlpacaWebSocketHandler(ObjectMapper objectMapper, String currentTicker, String apiKey, String apiSecret) {
