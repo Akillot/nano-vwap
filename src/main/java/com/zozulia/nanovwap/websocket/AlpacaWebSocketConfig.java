@@ -3,6 +3,7 @@ package com.zozulia.nanovwap.websocket;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.beans.factory.annotation.Value;
 import tools.jackson.databind.ObjectMapper;
@@ -20,6 +21,7 @@ public class AlpacaWebSocketConfig {
     private final List<String> cryptoTickers = new ArrayList<>(List.of("BTC/USD", "ETH/USD", "LTC/USD", "SOL/USD", "AVAX/USD", "XRP/USD"));
 
     @Bean
+    @Profile("!test")
     public CommandLineRunner commandLineRunner(ObjectMapper objectMapper, @Value("${alpaca.api.key}") String apiKey, @Value("${alpaca.api.secret}") String apiSecret) {
         return args -> {
             Scanner scanner = new Scanner(System.in);
