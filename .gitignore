@@ -38,3 +38,4 @@ out/
 
 ### Other ###
 .env
+.DS_Store

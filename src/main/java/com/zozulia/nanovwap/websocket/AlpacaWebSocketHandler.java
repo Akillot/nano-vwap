@@ -12,6 +12,7 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
+import java.text.DecimalFormat;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
@@ -26,6 +27,7 @@ public class AlpacaWebSocketHandler extends TextWebSocketHandler {
     private final String apiKey;
     private final String apiSecret;
     private final String url;
+    private final DecimalFormat format;
 
     private static final int RECONNECT_DELAY_TIME_SECONDS = 10;
     private volatile boolean reconnectEnabled = true;
@@ -73,8 +75,18 @@ public class AlpacaWebSocketHandler extends TextWebSocketHandler {
                                 .toLocalDateTime()
                                 .truncatedTo(ChronoUnit.SECONDS);
 
-                        System.out.println("Deal info: " + trade.S() + " | Price: " + trade.p() + " | Size: " + trade.s() + " | Timestamp: " + localTime);
-                        System.out.println("Current VWAP: " + vwapCalculator.add(trade.p(), trade.s()));
+                        double currentVwap = vwapCalculator.add(trade.p(), trade.s());
+
+                        System.out.println("Deal info: " + trade.S()
+                                + " | Price: " + format.format(trade.p())
+                                + " | Size: " + format.format(trade.s())
+                                + " | Timestamp: " + localTime);
+                        if(!Double.isNaN(currentVwap)) {
+                            System.out.println("Current VWAP: " + format.format(currentVwap));
+                        }
+                        else {
+                            System.out.println("Current VWAP is N/A");
+                        }
                         System.out.println("--------------------------------");
                     }
                 }
@@ -113,11 +125,12 @@ public class AlpacaWebSocketHandler extends TextWebSocketHandler {
         CompletableFuture.runAsync(this::connect,  delayed);
     }
 
-    public AlpacaWebSocketHandler(ObjectMapper objectMapper, String currentTicker, String apiKey, String apiSecret, String url) {
+    public AlpacaWebSocketHandler(ObjectMapper objectMapper, String currentTicker, String apiKey, String apiSecret, String url, DecimalFormat format) {
         this.objectMapper = objectMapper;
         this.currentTicker = currentTicker;
         this.apiKey = apiKey;
         this.apiSecret = apiSecret;
         this.url = url;
+        this.format = format;
     }
 }
