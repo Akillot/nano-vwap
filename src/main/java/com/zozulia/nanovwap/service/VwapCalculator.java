@@ -13,4 +13,9 @@ public class VwapCalculator {
         if (totalVolume == 0) return Double.NaN;
         return sumPriceVolume / totalVolume;
     }
+
+    public void reset(){
+        sumPriceVolume = 0.0;
+        totalVolume = 0.0;
+    }
 }

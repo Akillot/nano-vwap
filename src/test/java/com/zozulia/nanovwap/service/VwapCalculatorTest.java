@@ -40,4 +40,14 @@ public class VwapCalculatorTest {
         double result = vwapCalculator.add(1, 0);
         assertEquals(100.0, result, 1e-9);
     }
+
+    @Test
+    void resetVwap(){
+        vwapCalculator.add(100, 12);
+        vwapCalculator.add(50, 22);
+        vwapCalculator.reset();
+
+        double result = vwapCalculator.add(100, 10);
+        assertEquals(100.0,result,1e-9);
+    }
 }
