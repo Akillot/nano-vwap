@@ -15,6 +15,7 @@ import tools.jackson.databind.ObjectMapper;
 import java.text.DecimalFormat;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -33,7 +34,7 @@ public class AlpacaWebSocketHandler extends TextWebSocketHandler {
     private volatile boolean reconnectEnabled = true;
 
     private final ObjectMapper objectMapper;
-    private final VwapCalculator vwapCalculator = new VwapCalculator();
+    private final VwapCalculator vwapCalculator = new VwapCalculator(ZoneOffset.UTC);
     private final StandardWebSocketClient client = new StandardWebSocketClient();
 
     @Override
@@ -43,15 +44,15 @@ public class AlpacaWebSocketHandler extends TextWebSocketHandler {
 
         if (rootNode.isArray()) {
             for (JsonNode event : rootNode) {
-                String messageType = event.get("T").asText();
+                String messageType = event.get("T").asString();
 
-                if (messageType.equals("success") && event.get("msg").asText().equals("connected")) {
+                if (messageType.equals("success") && event.get("msg").asString().equals("connected")) {
                     AuthMessage authMessage = new AuthMessage("auth", apiKey, apiSecret);
                     String jsonString = objectMapper.writeValueAsString(authMessage);
                     session.sendMessage(new TextMessage(jsonString));
                     System.out.println("--- An authorization request has been sent");
                 }
-                else if (messageType.equals("success") && event.get("msg").asText().equals("authenticated")) {
+                else if (messageType.equals("success") && event.get("msg").asString().equals("authenticated")) {
                     SubscribeMessage subscribeMessage = new SubscribeMessage("subscribe", List.of(currentTicker));
                     String jsonSubscribeListString = objectMapper.writeValueAsString(subscribeMessage);
 
@@ -62,7 +63,7 @@ public class AlpacaWebSocketHandler extends TextWebSocketHandler {
                     System.out.println("--- Subscribed to trades: " + event.get("trades"));
                 }
                 else if (messageType.equals("error")) {
-                    System.out.println("--- Alpaca error " + event.get("code").asInt() + ": " + event.get("msg").asText());
+                    System.out.println("--- Alpaca error " + event.get("code").asInt() + ": " + event.get("msg").asString());
                     reconnectEnabled = false;
                     session.close();
                 }
@@ -75,7 +76,7 @@ public class AlpacaWebSocketHandler extends TextWebSocketHandler {
                                 .toLocalDateTime()
                                 .truncatedTo(ChronoUnit.SECONDS);
 
-                        double currentVwap = vwapCalculator.add(trade.p(), trade.s());
+                        double currentVwap = vwapCalculator.add(trade.p(), trade.s(), trade.t());
 
                         System.out.println("Deal info: " + trade.S()
                                 + " | Price: " + format.format(trade.p())
