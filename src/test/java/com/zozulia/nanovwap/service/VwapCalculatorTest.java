@@ -3,14 +3,18 @@ package com.zozulia.nanovwap.service;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
-import java.time.ZoneOffset;
+import java.time.LocalTime;
+import java.time.ZoneId;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class VwapCalculatorTest {
 
-    private final VwapCalculator vwapCalculator = new VwapCalculator(ZoneOffset.UTC);
+    private final static ZoneId UTC_ZONE = ZoneId.of("UTC");
+    private final static TradingSession CRYPTO_TRADING_SESSION = new TradingSession(UTC_ZONE, LocalTime.MIN, LocalTime.MAX);
     private static final Instant SOME_TIME = Instant.parse("2026-10-07T10:00:00Z");
+
+    private final VwapCalculator vwapCalculator = new VwapCalculator(CRYPTO_TRADING_SESSION);
 
     @Test
     void calculatesVwapForSeveralTrades(){

@@ -3,6 +3,7 @@ package com.zozulia.nanovwap.websocket;
 import com.zozulia.nanovwap.dto.AuthMessage;
 import com.zozulia.nanovwap.dto.SubscribeMessage;
 import com.zozulia.nanovwap.dto.TradeMessage;
+import com.zozulia.nanovwap.service.TradingSession;
 import com.zozulia.nanovwap.service.VwapCalculator;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
@@ -126,13 +127,13 @@ public class AlpacaWebSocketHandler extends TextWebSocketHandler {
     }
 
     public AlpacaWebSocketHandler(ObjectMapper objectMapper, String currentTicker, String apiKey,
-                                  String apiSecret, String url, DecimalFormat format, ZoneId zone) {
+                                  String apiSecret, String url, DecimalFormat format, TradingSession tradingSession) {
         this.objectMapper = objectMapper;
         this.currentTicker = currentTicker;
         this.apiKey = apiKey;
         this.apiSecret = apiSecret;
         this.url = url;
         this.format = format;
-        this.vwapCalculator = new VwapCalculator(zone);
+        this.vwapCalculator = new VwapCalculator(tradingSession);
     }
 }

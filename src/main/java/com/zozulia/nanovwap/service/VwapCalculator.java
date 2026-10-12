@@ -2,17 +2,16 @@ package com.zozulia.nanovwap.service;
 
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.ZoneId;
 
 public class VwapCalculator {
 
     private double sumPriceVolume = 0.0;
     private double totalVolume = 0.0;
-    private final ZoneId zoneID;
-    private LocalDate sessionDate= null;
+    private final TradingSession tradingSession;
+    private LocalDate sessionDate = null;
 
     public double add(double price, double size, Instant tradeTime) {
-        LocalDate tradeDate = tradeTime.atZone(zoneID).toLocalDate();
+        LocalDate tradeDate = tradeTime.atZone(tradingSession.zone()).toLocalDate();
 
         if (sessionDate == null) {
             sessionDate = tradeDate;
@@ -37,8 +36,8 @@ public class VwapCalculator {
         totalVolume = 0.0;
     }
 
-    public VwapCalculator(ZoneId zoneID) {
-        this.zoneID = zoneID;
+    public VwapCalculator(TradingSession tradingSession) {
+        this.tradingSession = tradingSession;
     }
 
     public double getVwap(){
