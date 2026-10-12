@@ -65,4 +65,12 @@ public class VwapCalculatorTest {
         double result = vwapCalculator.add(70,10,Instant.parse("2026-10-08T00:25:00Z"));
         assertEquals(60.0,result,1e-9);
     }
+
+    @Test
+    void ignoresTradeFromPreviousSession(){
+        vwapCalculator.add(100, 10, Instant.parse("2026-10-08T23:00:00Z"));
+        double result = vwapCalculator.add(500, 10, Instant.parse("2026-10-07T23:00:00Z"));
+
+        assertEquals(100.0,result,1e-9);
+    }
 }

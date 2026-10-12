@@ -21,13 +21,15 @@ public class VwapCalculator {
             reset();
             sessionDate = tradeDate;
         }
+        else if(tradeDate.isBefore(sessionDate)) {
+            return getVwap();
+        }
 
         if (price > 0 && size > 0) {
             sumPriceVolume += price * size;
             totalVolume += size;
         }
-        if (totalVolume == 0) return Double.NaN;
-        return sumPriceVolume / totalVolume;
+        return getVwap();
     }
 
     public void reset(){
@@ -37,5 +39,10 @@ public class VwapCalculator {
 
     public VwapCalculator(ZoneId zoneID) {
         this.zoneID = zoneID;
+    }
+
+    public double getVwap(){
+        if (totalVolume == 0) return Double.NaN;
+        return sumPriceVolume / totalVolume;
     }
 }
