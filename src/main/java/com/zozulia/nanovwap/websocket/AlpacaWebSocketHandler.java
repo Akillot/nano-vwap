@@ -15,7 +15,6 @@ import tools.jackson.databind.ObjectMapper;
 import java.text.DecimalFormat;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -34,7 +33,7 @@ public class AlpacaWebSocketHandler extends TextWebSocketHandler {
     private volatile boolean reconnectEnabled = true;
 
     private final ObjectMapper objectMapper;
-    private final VwapCalculator vwapCalculator = new VwapCalculator(ZoneOffset.UTC);
+    private final VwapCalculator vwapCalculator;
     private final StandardWebSocketClient client = new StandardWebSocketClient();
 
     @Override
@@ -126,12 +125,14 @@ public class AlpacaWebSocketHandler extends TextWebSocketHandler {
         CompletableFuture.runAsync(this::connect,  delayed);
     }
 
-    public AlpacaWebSocketHandler(ObjectMapper objectMapper, String currentTicker, String apiKey, String apiSecret, String url, DecimalFormat format) {
+    public AlpacaWebSocketHandler(ObjectMapper objectMapper, String currentTicker, String apiKey,
+                                  String apiSecret, String url, DecimalFormat format, ZoneId zone) {
         this.objectMapper = objectMapper;
         this.currentTicker = currentTicker;
         this.apiKey = apiKey;
         this.apiSecret = apiSecret;
         this.url = url;
         this.format = format;
+        this.vwapCalculator = new VwapCalculator(zone);
     }
 }

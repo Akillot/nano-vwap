@@ -9,6 +9,7 @@ import tools.jackson.databind.ObjectMapper;
 
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -20,8 +21,12 @@ public class AlpacaWebSocketConfig {
     private final static String CRYPTO_URL = "wss://stream.data.alpaca.markets/v1beta3/crypto/us";
 
     private final static DecimalFormatSymbols US_SYMBOLS = new DecimalFormatSymbols(Locale.US);
+
     private final static DecimalFormat STOCK_FORMAT = new DecimalFormat("0.###", US_SYMBOLS);
     private final static DecimalFormat CRYPTO_FORMAT = new DecimalFormat("0.########", US_SYMBOLS);
+
+    private final static ZoneId STOCK_NY_ZONE = ZoneId.of("America/New_York");
+    private final static ZoneId UTC_ZONE = ZoneId.of("UTC"); // usually for crypto
 
     private final List<String> stockTickers = new ArrayList<>(List.of("AAPL", "MSFT", "GOOGL", "META", "NVDA", "AMZN", "TSLA", "PLTR", "AVGO"));
     private final List<String> cryptoTickers = new ArrayList<>(List.of("BTC/USD", "ETH/USD", "LTC/USD", "SOL/USD", "AVAX/USD", "XRP/USD"));
@@ -33,6 +38,7 @@ public class AlpacaWebSocketConfig {
             Scanner scanner = new Scanner(System.in);
             String url, currentTicker;
             DecimalFormat format;
+            ZoneId zone;
 
             System.out.println("\nStock Tickers:");
             for (String ticker : stockTickers) System.out.print(ticker + " ");
@@ -46,18 +52,20 @@ public class AlpacaWebSocketConfig {
                 if (stockTickers.contains(currentTicker)) {
                     url = STOCK_URL;
                     format = STOCK_FORMAT;
+                    zone = STOCK_NY_ZONE;
                     break;
                 }
                 else if (cryptoTickers.contains(currentTicker)) {
                     url = CRYPTO_URL;
                     format = CRYPTO_FORMAT;
+                    zone = UTC_ZONE;
                     break;
                 }
                 else System.out.println("Invalid ticker: " + currentTicker);
             }
 
             System.out.println("Ticker has been picked: " + currentTicker + ". Awaiting signal...");
-            var handler = new AlpacaWebSocketHandler(objectMapper, currentTicker, apiKey, apiSecret, url, format);
+            var handler = new AlpacaWebSocketHandler(objectMapper, currentTicker, apiKey, apiSecret, url, format, zone);
             handler.connect();
         };
     }
