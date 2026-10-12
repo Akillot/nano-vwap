@@ -11,6 +11,10 @@ public class VwapCalculator {
     private LocalDate sessionDate = null;
 
     public double add(double price, double size, Instant tradeTime) {
+
+        if(!tradingSession.isOpenAt(tradeTime)) {
+            return getVwap();
+        }
         LocalDate tradeDate = tradeTime.atZone(tradingSession.zone()).toLocalDate();
 
         if (sessionDate == null) {

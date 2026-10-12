@@ -77,4 +77,17 @@ public class VwapCalculatorTest {
 
         assertEquals(100.0,result,1e-9);
     }
+
+    @Test
+    void ignoresPreMarketTradeAndResetsAtOpen(){
+        TradingSession nySession = new TradingSession(ZoneId.of("America/New_York"), LocalTime.parse("09:30"), LocalTime.parse("16:00"));
+        VwapCalculator calculator = new VwapCalculator(nySession);
+
+        calculator.add(100, 10, Instant.parse("2026-10-07T14:00:00Z"));
+        double afterPreMarket = calculator.add(500, 10, Instant.parse("2026-10-08T08:00:00Z"));
+        double afterOpen = calculator.add(200,10,Instant.parse("2026-10-08T13:30:00Z"));
+
+        assertEquals(100.0,afterPreMarket,1e-9);
+        assertEquals(200.0,afterOpen,1e-9);
+    }
 }
